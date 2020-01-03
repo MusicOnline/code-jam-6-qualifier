@@ -144,6 +144,7 @@ class Part001_BasicRequirements(unittest.TestCase):
             "2019-10-01T74:44:28",  # Invalid value (74) for hour
             "2019-10-01T12:61",  # Invalid value (61) for minutes
             "2019-10-01T07:88:12",  # Invalid value (88) for hour
+
             "2019-10-01T00:01:65",  # Invalid value (65) for seconds
             "2019-13-66T25:62:88",  # Invalid values for everything but the year
 
@@ -162,3 +163,91 @@ class Part001_BasicRequirements(unittest.TestCase):
 
 class Part002_AdvancedRequirements(unittest.TestCase):
     """Advanced Requirements."""
+
+    def _run_test_cases(self, test_cases: typing.Tuple[TestCase]) -> None:
+        for test_case in test_cases:
+            with self.subTest(**test_case._asdict()):
+                actual_output = parse_iso8601(test_case.input)
+
+                self.assertIsInstance(actual_output, datetime.datetime)
+                self.assertEqual(test_case.expected_output, actual_output)
+                self.assertEqual(
+                    test_case.expected_output.tzinfo, actual_output.tzinfo
+                )
+
+    def test_001_accepts_valid_datetime_strings(self) -> None:
+        """Accepts valid datetime strings under advanced requirements."""
+        test_cases = (
+            # Truncated formats
+            TestCase(
+                input="20191218T2110",
+                expected_output=datetime.datetime(
+                    year=2019, month=12, day=18, hour=21, minute=10
+                )
+            ),
+            TestCase(
+                input="19560131T000010",
+                expected_output=datetime.datetime(
+                    year=1956, month=1, day=31, hour=0, minute=0, second=10
+                )
+            ),
+            # Fractional seconds
+            TestCase(
+                input="19940126T235959.999999",
+                expected_output=datetime.datetime(
+                    year=1994, month=1, day=26, hour=23, minute=59, second=59, microsecond=999999
+                )
+            ),
+            TestCase(
+                input="1996-02-10T08:17:17.054",
+                expected_output=datetime.datetime(
+                    year=1996, month=2, day=10, hour=8, minute=17, second=17, microsecond=54000
+                )
+            ),
+            # Timezones
+            TestCase(
+                input="19100622T1111Z",
+                expected_output=datetime.datetime(
+                    year=1910, month=6, day=22, hour=11, minute=11, tzinfo=datetime.timezone.utc
+                )
+            ),
+            TestCase(
+                input="1905-12-22T23:59+12:01",
+                expected_output=datetime.datetime(
+                    year=1905, month=12, day=22, hour=23, minute=59,
+                    tzinfo=datetime.timezone(datetime.timedelta(hours=12, minutes=1))
+                )
+            ),
+            TestCase(
+                input="1912-06-23T00-0308",
+                expected_output=datetime.datetime(
+                    year=1912, month=6, day=23, hour=0,
+                    tzinfo=datetime.timezone(datetime.timedelta(hours=-3, minutes=-8))
+                )
+            ),
+            TestCase(
+                input="1791-12-26T23+23",
+                expected_output=datetime.datetime(
+                    year=1791, month=12, day=26, hour=23,
+                    tzinfo=datetime.timezone(datetime.timedelta(hours=23))
+                )
+            ),
+        )
+
+        self._run_test_cases(test_cases)
+
+    def test_002_rejects_mixed_truncation(self) -> None:
+        """Parser raises ValueError for mixing truncation."""
+        test_cases = (
+            "2019-10-01T1223",
+            "2019-10-01T122334",
+            "2019-10-01T122334.455",
+            "20191001T12:23",
+            "20191001T12:23:34",
+            "20191001T12:23:34.455",
+        )
+
+        for invalid_datestring in test_cases:
+            with self.subTest(input=invalid_datestring):
+                with self.assertRaises(ValueError):
+                    parse_iso8601(invalid_datestring)
