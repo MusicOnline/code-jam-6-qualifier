@@ -44,6 +44,7 @@ datetime_regex = re.compile(
 def parse_iso8601(timestamp: str) -> datetime.datetime:
     """Parse an ISO-8601 formatted time stamp."""
     if match := re.match(datetime_regex, timestamp):
+        assert match is not None  # does mypy not detect that condiitonal above?
         # Check truncation consistency
         date_seperator = match.group("hyphen")  # "-" or ""
         time_seperator = match.group("colon")  # ":", "" or None
