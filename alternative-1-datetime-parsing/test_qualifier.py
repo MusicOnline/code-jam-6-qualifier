@@ -23,7 +23,7 @@ class Part001_BasicRequirements(unittest.TestCase):
                 self.assertIsNone(actual_output.tzinfo)
 
     def test_001_accepts_valid_date_only_strings(self) -> None:
-        """Accepts valid date strings: `yyyy-mm-dd`."""
+        """Accepts valid date strings."""
         test_cases = (
             TestCase(
                 input="1583-01-01",  # The standard only requires year 1583+ by default
@@ -37,17 +37,29 @@ class Part001_BasicRequirements(unittest.TestCase):
                 input="2017-01-08",
                 expected_output=datetime.datetime(year=2017, month=1, day=8)
             ),
-
             TestCase(
                 input="2008-12-03",
                 expected_output=datetime.datetime(year=2008, month=12, day=3)
+            ),
+            # Additional test cases that were not published with the qualifier
+            TestCase(
+                input="1791-12-26",
+                expected_output=datetime.datetime(year=1791, month=12, day=26)
+            ),
+            TestCase(
+                input="1701-04-15",
+                expected_output=datetime.datetime(year=1701, month=4, day=15)
+            ),
+            TestCase(
+                input="1994-09-19",
+                expected_output=datetime.datetime(year=1994, month=9, day=19)
             ),
         )
 
         self._run_test_cases(test_cases)
 
     def test_002_accepts_valid_datetime_strings(self) -> None:
-        """Accepts valid datetime strings: `yyyy-mm-ddT<time>`."""
+        """Accepts valid datetime strings."""
         test_cases = (
             # <time> = HH:MM:SS
             TestCase(
@@ -106,12 +118,25 @@ class Part001_BasicRequirements(unittest.TestCase):
                     year=1596, month=3, day=31, hour=12
                 )
             ),
+            # Additional test cases that were not published with the qualifier
+            TestCase(
+                input="1991-09-17T08:57:08",
+                expected_output=datetime.datetime(
+                    year=1991, month=9, day=17, hour=8, minute=57, second=8
+                )
+            ),
+            TestCase(
+                input="1969-07-20T20:17",
+                expected_output=datetime.datetime(
+                    year=1969, month=7, day=20, hour=20, minute=17
+                )
+            ),
         )
 
         self._run_test_cases(test_cases)
 
-    def test_003_rejects_invalid_datetime_strings(self) -> None:
-        """Parser raises ValueError for invalid datetime strings."""
+    def test_003_rejects_invalid_datetime_stings(self) -> None:
+        """Raises ValueError for invalid strings."""
         test_cases = (
             # Odd strings
             "",  # Empty strings are not valid dateetime strings
@@ -153,6 +178,15 @@ class Part001_BasicRequirements(unittest.TestCase):
             "1677-09-03T12-31-05",  # `-` is not a valid separator for the <time> part
             "1677-09-03T12:3105",  # Combining the partial and truncated format is not allow
             "1677-09-03T1231:05",  # Combining the partial and truncated format is not allow
+
+            # Additional test cases that were not published with the qualifier
+            " ",
+            "All the ducks are swimming in the water",
+            "1999-21-09",  # Invalid value for the month
+            "2000-12-64",  # Invalid value for the day
+            "1887&12&01",  # Invalid date separator
+            "1994-04-05K15:15:15",  # Invalid part separator
+            "2020-01-01T100:100:100",  # Invalid time
         )
 
         for invalid_datestring in test_cases:
